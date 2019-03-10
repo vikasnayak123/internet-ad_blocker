@@ -1,0 +1,216 @@
+#!/usr/bin/env bash
+
+function bye (){
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "One man's advertising is another man's malware"
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  sleep 1
+  clear
+  exit 0
+}
+
+function unblock_ad (){
+  pmcp=$(which cp)
+  pmrm=$(which rm)
+  if [ ! -f /etc/hosts-block ]; then
+    clear
+    echo ""
+    { for i in {1..100}; do echo -en "%"; done; echo; }
+    echo ""
+    echo -e "Ad-blocking hosts not in use! Nothing to unblock!"
+    echo ""
+    { for i in {1..100}; do echo -en "%"; done; echo; }
+    echo ""
+    echo ""
+    read -r -s -p $'Press Any Key To Return To Main Menu...\n' -n1
+    starrt
+  fi
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Replacing the original hosts file..."
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  sleep 1
+  "$pmcp" /etc/hosts-system /etc/hosts
+  chmod 644 /etc/hosts
+  "$pmrm" -f /etc/hosts-system
+  "$pmrm" -f /etc/hosts-block
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "All done!!! Original system hosts file restored!!!"
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo ""
+  read -r -s -p $'Press Any Key To Return To Main Menu...\n' -n1
+  main
+}
+
+function block_ad (){
+  pmcp=$(which cp)
+  hosts_cooking=$(mktemp)
+  hosts_cooked=$(mktemp)
+  datum=$(date +%d-%m-%Y:%H:%M:%S)
+  pmrm=$(which rm)
+  if [ ! -f /etc/hosts-system ]; then
+    "$pmcp" /etc/hosts /etc/hosts-system
+    chmod 444 /etc/hosts-system
+  fi
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Downloading ad-blocking hosts files..."
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  wget -nv -O - "http://winhelp2002.mvps.org/hosts.txt" >> "$hosts_cooking" || { "$pmrm" -f "$hosts_cooking"; "$pmrm" -f "$hosts_cooked"; clear; echo ""; for i in {1..100}; do echo -en "%"; done; echo; echo ""; echo -e "OOPS!! Failed to download \"mvps\" hosts file!!"; echo -e "Make sure your internet connection is active!"; }
+  wget -nv -O - "http://hosts-file.net/ad_servers.asp" >> "$hosts_cooking" || { "$pmrm" -f "$hosts_cooking"; "$pmrm" -f "$hosts_cooked"; clear; echo ""; for i in {1..100}; do echo -en "%"; done; echo; echo ""; echo -e "OOPS!! Failed to download \"hpHo\" hosts file!!"; echo -e "Make sure your internet connection is active!"; }
+  wget -nv -O - "http://someonewhocares.org/hosts/hosts" >> "$hosts_cooking" || { "$pmrm" -f "$hosts_cooking"; "$pmrm" -f "$hosts_cooked"; clear; echo ""; for i in {1..100}; do echo -en "%"; done; echo; echo ""; echo -e  "OOPS!! Failed to download \"sowc\" hosts file!!"; echo -e "Make sure your internet connection is active!"; }
+  wget -nv -O - "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext" >> "$hosts_cooking" || { "$pmrm" -f "$hosts_cooking"; "$pmrm" -f "$hosts_cooked"; clear; echo ""; for i in {1..100}; do echo -en "%"; done; echo; echo ""; echo -e "OOPS!! Failed to download \"yoyo\" hosts file!!";exit 1; }
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Loading..."
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  sleep 1
+  sed -e 's/\r//' -e '/^127.0.0.1/!d' -e '/localhost/d' -e 's/127.0.0.1/0.0.0.0/' -e 's/ \+/\t/' -e 's/#.*$//' -e 's/[ \t]*$//' < "$hosts_cooking" | sort -u > "$hosts_cooked"
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Completing..."
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  sleep 1
+  echo -e "\n# Ad blocking list generated on $datum" | cat /etc/hosts-system - "$hosts_cooked" > /etc/hosts-block
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Doing some clean-up..."
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  sleep 1
+  "$pmrm" -f "$hosts_cooking"
+  "$pmrm" -f "$hosts_cooked"
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Installing Ad blocker generated hosts file..."
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  sleep 1
+  "$pmcp" /etc/hosts-block /etc/hosts
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "All done!!! Enjoy the internet without those pesky advertises!!!"
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo ""
+  read -r -s -p $'Press Any Key To Return To Main Menu\n' -n1
+  main
+}
+
+function netcheck (){
+  wget --spider --user-agent="Mozilla/5.0 Gecko/20100101" --timeout=30 -q "www.google.com" -O /dev/null
+  RETVAL=$?
+  case "$RETVAL" in
+    0)
+      block_ad
+      ;;
+    *)
+      clear
+      echo ""
+      { for i in {1..100}; do echo -en "%"; done; echo; }
+      echo ""
+      echo -e "No active internet connection available!!"
+      echo -e "Please check your internet connectivity!!"
+      echo -e "Active internet connection is required to"
+      echo -e "download necessary adblocking hosts files"
+      echo ""
+      echo ""
+      read -r -s -p $'Press Any Key To Return To Main Menu\n' -n1
+      main
+      ;;
+  esac
+}
+function main (){
+  if [ "$EUID" -ne 0 ]; then
+    clear
+    echo ""
+    { for i in {1..100}; do echo -en "%"; done; echo; }
+    echo ""
+    echo -e "You must run \"file \" script using \"sudo\" or as the root user."
+    echo -e "Hint : \"sudo silename\" or \"su -c 'pmiab'\""
+    echo ""
+    { for i in {1..100}; do echo -en "%"; done; echo; }
+    echo ""
+    exit 1
+  fi
+  clear
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo -e "Ad blocker blocks ads system-wide"
+  echo ""
+  { for i in {1..100}; do echo -en "%"; done; echo; }
+  echo ""
+  echo ""
+  echo -e "01 Block Internet Adverts"
+  echo -e "02 Unblock Internet Adverts"
+  echo -e "03 Quit "
+  echo -e ""
+  echo -e ""
+  echo -e "Enter Your Choice: "
+  echo -e ""
+  read -r Choice
+  case $Choice in
+    01 | 1)
+      netcheck
+      ;;
+    02 | 2)
+      unblock_ad
+      ;;
+    03 | 3)
+      bye
+      ;;
+    *)
+      clear
+      echo -e ""
+      echo -e ""
+      echo -e "\"$Choice\" Is An Invalid Option!"
+      echo -e ""
+      echo -e "Correct Options To Choose From Are 1-2-3"
+      echo -e ""
+      echo -e "To block internet adverts press \"1\" & hit \"Enter\" key"
+      echo -e "To restore original hosts press \"2\" & hit \"Enter\" key"
+      echo -e "To exit from pmiab script press \"3\" & hit \"Enter\" key"
+      echo -e "Please enter a valid option"
+      echo -e ""
+      read -r -s -p $'Press Any Key To Try Again...\n' -n1
+      main;;
+  esac
+}
+
+while :
+do
+  main
+done
